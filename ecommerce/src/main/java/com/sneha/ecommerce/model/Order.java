@@ -1,29 +1,66 @@
 package com.sneha.ecommerce.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import jakarta.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
+import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
+
 @Entity
-@Table(name="orders")
+@Table(name="order_table")
 public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long userId;
+
+
+    @ManyToOne
+    @JoinColumn(name="user_id", nullable = false)
+    private User user;
+
     @ManyToMany
-    @JoinTable(name="order_products", joinColumns = @JoinColumn(name="order_id"),
-            inverseJoinColumns = @JoinColumn(name="product_id")
-    )
-    private List<Product> products;
-    private Double totalAmount;
+    private List<Product> products=new ArrayList<>();
+
+    @Column(nullable = false)
+    private double total;
+
+    @Column(nullable = false)
+    private String status;
+
+    @Column(name="created_at",nullable = false)
+    private LocalDateTime createdAt;
 
     public Order(){}
-    public Order(Long userId, List<Product>products, Double totalAmount){
-        this.userId=userId;
+    public Order(User user, List<Product>products,String status, LocalDateTime createdAt){
+        this.user=user;
         this.products=products;
-        this.totalAmount=totalAmount;
+        this.status=status;
+        this.createdAt=createdAt;
     }
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+
+    }
+    @PreUpdate
+    protected void onUpdate(){
+        calculateTotal();}
+    private void calculateTotal(){
+        this.total=products.stream().mapToDouble(Product::getPrice).sum();
+    }
+
+
 
     public Long getId() {
         return id;
@@ -33,20 +70,12 @@ public class Order {
         this.id = id;
     }
 
-    public Long getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public Double getTotalAmount() {
-        return totalAmount;
-    }
-
-    public void setTotalAmount(Double totalAmount) {
-        this.totalAmount = totalAmount;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public List<Product> getProducts() {
@@ -55,5 +84,29 @@ public class Order {
 
     public void setProducts(List<Product> products) {
         this.products = products;
+    }
+
+    public double getTotal() {
+        return total;
+    }
+
+    public void setTotal(double total) {
+        this.total = total;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }
